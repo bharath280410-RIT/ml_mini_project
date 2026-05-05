@@ -1,0 +1,177 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+
+# ── Dataset ──────────────────────────────────────────────────────────────────
+data = np.array([
+    [2.0, 60, 50, 54.0],  [2.5, 62, 52, 57.1],  [3.0, 64, 54, 60.2],
+    [3.5, 66, 56, 63.3],  [4.0, 68, 58, 66.4],  [4.5, 70, 60, 69.5],
+    [5.0, 72, 62, 72.6],  [5.5, 74, 64, 75.7],  [6.0, 76, 66, 78.8],
+    [6.5, 78, 68, 81.9],  [7.0, 80, 70, 85.0],  [7.5, 82, 72, 88.1],
+    [8.0, 84, 74, 91.2],  [8.5, 86, 76, 94.3],  [9.0, 88, 78, 97.4],
+    [2.2, 61, 51, 55.55], [2.8, 63, 53, 58.95], [3.3, 65, 55, 62.15],
+    [3.8, 67, 57, 65.35], [4.3, 69, 59, 68.55], [4.8, 71, 61, 71.75],
+    [5.3, 73, 63, 74.95], [5.8, 75, 65, 78.15], [6.3, 77, 67, 81.35],
+    [6.8, 79, 69, 84.55], [7.3, 81, 71, 87.75], [7.8, 83, 73, 90.95],
+    [8.3, 85, 75, 94.15], [8.8, 87, 77, 97.35], [9.3, 89, 79, 100.55],
+    [2.1, 60, 50, 54.35], [2.6, 62, 52, 57.45], [3.1, 64, 54, 60.55],
+    [3.6, 66, 56, 63.65], [4.1, 68, 58, 66.75], [4.6, 70, 60, 69.85],
+    [5.1, 72, 62, 72.95], [5.6, 74, 64, 76.05], [6.1, 76, 66, 79.15],
+    [6.6, 78, 68, 82.25], [7.1, 80, 70, 85.35], [7.6, 82, 72, 88.45],
+    [8.1, 84, 74, 91.55], [8.6, 86, 76, 94.65], [9.1, 88, 78, 97.75],
+    [2.3, 61, 51, 55.85], [3.2, 65, 55, 62.65], [4.7, 70, 60, 71.05],
+])
+
+X = data[:, :3]   # study_hours, attendance, previous_score
+y = data[:, 3]    # final_score
+
+feature_names = ["study_hours", "attendance", "previous_score"]
+
+# ── Train / Test Split ────────────────────────────────────────────────────────
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# ── Model ─────────────────────────────────────────────────────────────────────
+model = LinearRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+y_pred_all = model.predict(X)
+
+mse  = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2   = r2_score(y_test, y_pred)
+r2_train = r2_score(y_train, model.predict(X_train))
+
+print("=" * 52)
+print("       STUDENT PERFORMANCE – LINEAR REGRESSION")
+print("=" * 52)
+print(f"\nCoefficients:")
+for name, coef in zip(feature_names, model.coef_):
+    print(f"  {name:<20}: {coef:+.4f}")
+print(f"  {'intercept':<20}: {model.intercept_:+.4f}")
+print(f"\nModel Equation:")
+terms = " + ".join(f"{c:+.4f}×{n}" for c, n in zip(model.coef_, feature_names))
+print(f"  final_score = {model.intercept_:.4f} {terms}")
+print(f"\nPerformance Metrics:")
+print(f"  R²  (train) : {r2_train:.4f}")
+print(f"  R²  (test)  : {r2:.4f}")
+print(f"  MSE (test)  : {mse:.4f}")
+print(f"  RMSE(test)  : {rmse:.4f}")
+print("=" * 52)
+
+# ── Style ─────────────────────────────────────────────────────────────────────
+plt.rcParams.update({
+    "figure.facecolor": "#0d1117",
+    "axes.facecolor":   "#161b22",
+    "axes.edgecolor":   "#30363d",
+    "axes.labelcolor":  "#c9d1d9",
+    "axes.titlecolor":  "#e6edf3",
+    "xtick.color":      "#8b949e",
+    "ytick.color":      "#8b949e",
+    "text.color":       "#c9d1d9",
+    "grid.color":       "#21262d",
+    "grid.linestyle":   "--",
+    "grid.linewidth":   0.6,
+    "font.family":      "monospace",
+})
+
+ACCENT   = "#58a6ff"
+ACCENT2  = "#f78166"
+ACCENT3  = "#3fb950"
+ACCENT4  = "#d2a8ff"
+SCATTER  = "#79c0ff"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FIGURE 1 – Actual vs Predicted  &  Residuals
+# ═══════════════════════════════════════════════════════════════════════════════
+fig1, axes1 = plt.subplots(1, 2, figsize=(14, 5))
+fig1.suptitle("Linear Regression – Predicted vs Actual & Residuals",
+              fontsize=13, fontweight="bold", color="#e6edf3", y=1.02)
+
+# — Actual vs Predicted --------------------------------------------------------
+ax = axes1[0]
+ax.scatter(y_test, y_pred, color=SCATTER, edgecolors="#1f6feb",
+           linewidths=0.6, s=70, alpha=0.9, zorder=3, label="Test points")
+lims = [min(y.min(), y_pred.min()) - 2, max(y.max(), y_pred.max()) + 2]
+ax.plot(lims, lims, color=ACCENT2, linewidth=1.8, linestyle="--",
+        label="Perfect fit (y = x)", zorder=4)
+ax.set_xlim(lims); ax.set_ylim(lims)
+ax.set_xlabel("Actual Final Score");  ax.set_ylabel("Predicted Final Score")
+ax.set_title("Actual vs Predicted", fontsize=11)
+ax.legend(fontsize=8, facecolor="#21262d", edgecolor="#30363d")
+ax.grid(True)
+
+# annotation box
+textstr = f"R² = {r2:.4f}\nRMSE = {rmse:.4f}"
+ax.text(0.04, 0.95, textstr, transform=ax.transAxes, fontsize=9,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round,pad=0.4", facecolor="#21262d",
+                  edgecolor=ACCENT, alpha=0.85))
+
+# — Residuals ------------------------------------------------------------------
+ax = axes1[1]
+residuals = y_test - y_pred
+ax.scatter(y_pred, residuals, color=ACCENT3, edgecolors="#238636",
+           linewidths=0.6, s=70, alpha=0.9, zorder=3)
+ax.axhline(0, color=ACCENT2, linewidth=1.8, linestyle="--", label="Zero line")
+ax.set_xlabel("Predicted Final Score"); ax.set_ylabel("Residual (Actual − Predicted)")
+ax.set_title("Residual Plot", fontsize=11)
+ax.legend(fontsize=8, facecolor="#21262d", edgecolor="#30363d")
+ax.grid(True)
+
+fig1.tight_layout()
+fig1.savefig("linear_regression_plot1.png", dpi=150, bbox_inches="tight",
+             facecolor=fig1.get_facecolor())
+print("\nSaved → linear_regression_plot1.png")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FIGURE 2 – Per-feature relationships  &  Coefficient Bar
+# ═══════════════════════════════════════════════════════════════════════════════
+fig2, axes2 = plt.subplots(2, 2, figsize=(14, 10))
+fig2.suptitle("Linear Regression – Feature Analysis",
+              fontsize=13, fontweight="bold", color="#e6edf3")
+
+colors_feat = [ACCENT, ACCENT3, ACCENT4]
+
+# — One-feature scatter + regression line for each feature --------------------
+for i, (fname, col) in enumerate(zip(feature_names, colors_feat)):
+    ax = axes2[i // 2][i % 2]      # fills (0,0) (0,1) (1,0)
+    xi = X[:, i].reshape(-1, 1)
+    lr_i = LinearRegression().fit(xi, y)
+    xi_line = np.linspace(xi.min(), xi.max(), 200).reshape(-1, 1)
+    yi_line = lr_i.predict(xi_line)
+
+    ax.scatter(X[:, i], y, color=col, edgecolors="#0d1117",
+               linewidths=0.4, s=50, alpha=0.85, zorder=3)
+    ax.plot(xi_line, yi_line, color=ACCENT2, linewidth=2, zorder=4,
+            label=f"R² = {r2_score(y, lr_i.predict(xi)):.4f}")
+    ax.set_xlabel(fname); ax.set_ylabel("Final Score")
+    ax.set_title(f"Final Score vs {fname}", fontsize=10)
+    ax.legend(fontsize=8, facecolor="#21262d", edgecolor="#30363d")
+    ax.grid(True)
+
+# — Coefficient bar chart ------------------------------------------------------
+ax = axes2[1][1]
+bar_colors = [ACCENT if c > 0 else ACCENT2 for c in model.coef_]
+bars = ax.bar(feature_names, model.coef_, color=bar_colors,
+              edgecolor="#0d1117", linewidth=0.8)
+ax.axhline(0, color="#8b949e", linewidth=0.8, linestyle="-")
+ax.set_title("Feature Coefficients (Multiple LR)", fontsize=10)
+ax.set_ylabel("Coefficient Value")
+ax.grid(True, axis="y")
+for bar, val in zip(bars, model.coef_):
+    ax.text(bar.get_x() + bar.get_width() / 2,
+            val + (0.03 if val >= 0 else -0.08),
+            f"{val:.3f}", ha="center", va="bottom", fontsize=9, color="#e6edf3")
+
+fig2.tight_layout()
+fig2.savefig("linear_regression_plot2.png", dpi=150, bbox_inches="tight",
+             facecolor=fig2.get_facecolor())
+print("Saved → linear_regression_plot2.png")
+
+plt.show()
+print("\nDone.")
